@@ -32,7 +32,7 @@ Homepage = "https://github.com/carlosplanchon/worldclock-tty"
 Repository = "https://github.com/carlosplanchon/worldclock-tty"
 
 [project.scripts]
-chronos = "worldclock_tty.chronos:main"
+worldclock-tty = "worldclock_tty.chronos:main"
 
 [project.optional-dependencies]
 dev = ["pytest"]

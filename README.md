@@ -17,7 +17,7 @@ pip install worldclock-tty
 Run the clock:
 
 ```
-chronos
+worldclock-tty
 ```
 
 Press `Ctrl+C` to exit.
@@ -29,10 +29,10 @@ The display shows your local time at the top, followed by all configured timezon
 Timezones are stored in `~/.config/chronos/config.json`. Use IANA timezone names (e.g. `America/Chicago`, `Europe/Paris`).
 
 ```
-chronos add America/Chicago       # add a timezone
-chronos remove America/Chicago    # remove a timezone
-chronos list                      # show configured timezones
-chronos reset                     # restore built-in defaults
+worldclock-tty add America/Chicago       # add a timezone
+worldclock-tty remove America/Chicago    # remove a timezone
+worldclock-tty list                      # show configured timezones
+worldclock-tty reset                     # restore built-in defaults
 ```
 
 ### Default timezones
