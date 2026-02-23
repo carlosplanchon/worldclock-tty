@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "worldclock-tty"
-version = "0.0.3"
+version = "0.1.0"
 description = "A terminal-based world clock that displays multiple timezones in real-time."
 readme = "README.md"
 requires-python = ">=3.10"
