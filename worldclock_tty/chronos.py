@@ -66,16 +66,24 @@ class Chronos:
     LOCAL_TIME  = attr("bold") + fg(255)   # bold white
 
     # World clock entries
-    CITY  = fg(75)   # cornflower blue
-    SEP   = fg(238)  # dark gray
-    TIME  = fg(255)  # white
+    CITY   = fg(75)   # cornflower blue
+    OFFSET = fg(240)  # medium gray
+    TIME   = fg(255)  # white
 
     def _entry(self, tz: str) -> tuple[str, str]:
         """Return (plain, colored) for a timezone row."""
         city = _get_city(tz)
-        time_str = now(tz).format("HH:mm:ss")
-        plain   = f"{city}: {time_str}"
-        colored = f"{self.CITY}{city}{self.R}{self.SEP}:{self.R} {self.TIME}{time_str}{self.R}"
+        t = now(tz)
+        time_str = t.format("HH:mm:ss")
+        sign = "+" if t.offset >= 0 else "-"
+        h, m = divmod(abs(t.offset) // 60, 60)
+        offset_str = f"UTC{sign}{h}:{m:02d}" if m else f"UTC{sign}{h}"
+        plain   = f"{city} {offset_str}  {time_str}"
+        colored = (
+            f"{self.CITY}{city}{self.R} "
+            f"{self.OFFSET}{offset_str}{self.R}  "
+            f"{self.TIME}{time_str}{self.R}"
+        )
         return plain, colored
 
     def print_time_screen(self, timezones: list[str]) -> None:
@@ -109,7 +117,7 @@ class Chronos:
                 for row in range(max(len(left), len(right))):
                     lp, lc = left[row]  if row < len(left)  else ("", "")
                     rp, rc = right[row] if row < len(right) else ("", "")
-                    pad = 25 - len(lp)
+                    pad = 32 - len(lp)
                     sys.stdout.write(f"{lc}{' ' * pad} {rc}\033[K\n")
 
                 sys.stdout.flush()
