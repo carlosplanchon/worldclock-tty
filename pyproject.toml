@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=77.0.3", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "worldclock-tty"
+version = "0.0.3"
+readme = "README.md"
+requires-python = ">=3.10"
+
+license = "MIT"
+license-files = ["LICENSE"]
+
+dependencies = [
+    "colored",
+    "pendulum",
+    "vtclear",
+]
+
+classifiers = [
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14"
+]
+
+[project.scripts]
+chronos = "worldclock_tty.chronos:main"
