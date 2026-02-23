@@ -85,7 +85,7 @@ class Chronos:
         try:
             while True:
                 if first_run:
-                    sys.stdout.write("\033[2J\033[H")  # clear once on start
+                    sys.stdout.write("\033[3J\033[2J\033[H")  # clear scrollback + screen on start
                     first_run = False
                 else:
                     sys.stdout.write("\033[H")  # move to home, no clear = no flicker
