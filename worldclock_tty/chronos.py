@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 
 import json
+import sys
 from pathlib import Path
 from time import sleep
 
 import typer
 from colored import attr, fg
 from pendulum import now
-from vtclear import clear_screen
 
 DEFAULT_TIMEZONES = [
     "America/Buenos_Aires",
@@ -58,35 +58,61 @@ def _save_config(timezones: list[str]) -> None:
 
 
 class Chronos:
-    BOLD_YELLOW = attr("bold") + fg(11)
-    STYLE_RESET = attr("reset")
+    R = attr("reset")
+
+    # Local header
+    LOCAL_LABEL = attr("bold") + fg(11)   # bold yellow
+    LOCAL_DATE  = fg(244)                  # dim gray
+    LOCAL_TIME  = attr("bold") + fg(255)   # bold white
+
+    # World clock entries
+    CITY  = fg(75)   # cornflower blue
+    SEP   = fg(238)  # dark gray
+    TIME  = fg(255)  # white
+
+    def _entry(self, tz: str) -> tuple[str, str]:
+        """Return (plain, colored) for a timezone row."""
+        city = _get_city(tz)
+        time_str = now(tz).format("HH:mm:ss")
+        plain   = f"{city}: {time_str}"
+        colored = f"{self.CITY}{city}{self.R}{self.SEP}:{self.R} {self.TIME}{time_str}{self.R}"
+        return plain, colored
 
     def print_time_screen(self, timezones: list[str]) -> None:
         """Display the world clock. Press Ctrl+C to exit."""
         half = len(timezones) // 2
+        first_run = True
         try:
             while True:
-                clear_screen()
+                if first_run:
+                    sys.stdout.write("\033[2J\033[H")  # clear once on start
+                    first_run = False
+                else:
+                    sys.stdout.write("\033[H")  # move to home, no clear = no flicker
 
                 local = now()
-                local_tz = _get_city(local.tzinfo.name)
-                local_text = local.format("YYYY-MM-DD HH:mm:ss")
-                print(
-                    f"{self.BOLD_YELLOW}LOCAL [{local_tz}]:"
-                    f" {local_text}{self.STYLE_RESET}"
+                local_tz   = _get_city(local.tzinfo.name)
+                local_date = local.format("YYYY-MM-DD")
+                local_time = local.format("HH:mm:ss")
+                sys.stdout.write(
+                    f"{self.LOCAL_LABEL}LOCAL [{local_tz}]:{self.R} "
+                    f"{self.LOCAL_DATE}{local_date}{self.R} "
+                    f"{self.LOCAL_TIME}{local_time}{self.R}\033[K\n"
                 )
 
-                left: list[str] = []
-                right: list[str] = []
+                # Build columns as (plain, colored) pairs for correct padding
+                left:  list[tuple[str, str]] = []
+                right: list[tuple[str, str]] = []
                 for i, tz in enumerate(timezones):
-                    entry = f"{_get_city(tz)}: {now(tz).format('HH:mm:ss')}"
-                    (right if i >= half else left).append(entry)
+                    (right if i >= half else left).append(self._entry(tz))
 
                 for row in range(max(len(left), len(right))):
-                    l = left[row] if row < len(left) else ""
-                    r = right[row] if row < len(right) else ""
-                    print(f"{l}{' ' * (25 - len(l))} {r}")
+                    lp, lc = left[row]  if row < len(left)  else ("", "")
+                    rp, rc = right[row] if row < len(right) else ("", "")
+                    pad = 25 - len(lp)
+                    sys.stdout.write(f"{lc}{' ' * pad} {rc}\033[K\n")
 
+                sys.stdout.flush()
                 sleep(1)
         except KeyboardInterrupt:
             pass
