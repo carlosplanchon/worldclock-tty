@@ -5,6 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "worldclock-tty"
 version = "0.0.3"
+description = "A terminal-based world clock that displays multiple timezones in real-time."
 readme = "README.md"
 requires-python = ">=3.10"
 
@@ -14,6 +15,7 @@ license-files = ["LICENSE"]
 dependencies = [
     "colored",
     "pendulum",
+    "typer",
     "vtclear",
 ]
 
@@ -22,8 +24,18 @@ classifiers = [
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
-  "Programming Language :: Python :: 3.14"
+  "Programming Language :: Python :: 3.14",
 ]
+
+[project.urls]
+Homepage = "https://github.com/carlosplanchon/worldclock-tty"
+Repository = "https://github.com/carlosplanchon/worldclock-tty"
 
 [project.scripts]
 chronos = "worldclock_tty.chronos:main"
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
