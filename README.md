@@ -4,6 +4,8 @@ A terminal-based world clock that displays multiple timezones in real-time.
 
 ![worldclock-tty screenshot](https://raw.githubusercontent.com/carlosplanchon/worldclock-tty/refs/heads/main/worldclock_tty/assets/screenshot.png)
 
+This program is a heavy refactor of a timezone clock I made in 2016.
+
 ## Installation with uv
 ```bash
 uv add worldclock-tty
