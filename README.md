@@ -2,7 +2,7 @@
 
 A terminal-based world clock that displays multiple timezones in real-time.
 
-![worldclock-tty screenshot](https://raw.githubusercontent.com/carlosplanchon/worldclock-tty/refs/heads/main/assets/screenshot.png)
+![worldclock-tty screenshot](https://raw.githubusercontent.com/carlosplanchon/worldclock-tty/refs/heads/main/worldclock_tty/assets/screenshot.png)
 
 ## Installation with uv
 ```bash
