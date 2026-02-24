@@ -60,6 +60,8 @@ def _save_config(timezones: list[str]) -> None:
 class Chronos:
     R = attr("reset")
 
+    ENTRY_WIDTH = 30  # fixed column width: city+offset (left) + gap + time (right)
+
     # Local header
     LOCAL_LABEL = attr("bold") + fg(11)   # bold yellow
     LOCAL_DATE  = fg(244)                  # dim gray
@@ -71,17 +73,20 @@ class Chronos:
     TIME   = fg(255)  # white
 
     def _entry(self, tz: str) -> tuple[str, str]:
-        """Return (plain, colored) for a timezone row."""
+        """Return (plain, colored) for a timezone row, time right-justified."""
         city = _get_city(tz)
         t = now(tz)
         time_str = t.format("HH:mm:ss")
         sign = "+" if t.offset >= 0 else "-"
         h, m = divmod(abs(t.offset) // 60, 60)
         offset_str = f"UTC{sign}{h}:{m:02d}" if m else f"UTC{sign}{h}"
-        plain   = f"{city} {offset_str}  {time_str}"
+        right_part = f"{offset_str} {time_str}"
+        gap = " " * (self.ENTRY_WIDTH - len(city) - len(right_part))
+        plain   = f"{city}{gap}{right_part}"
         colored = (
-            f"{self.CITY}{city}{self.R} "
-            f"{self.OFFSET}{offset_str}{self.R}  "
+            f"{self.CITY}{city}{self.R}"
+            f"{gap}"
+            f"{self.OFFSET}{offset_str}{self.R} "
             f"{self.TIME}{time_str}{self.R}"
         )
         return plain, colored
@@ -117,8 +122,8 @@ class Chronos:
                 for row in range(max(len(left), len(right))):
                     lp, lc = left[row]  if row < len(left)  else ("", "")
                     rp, rc = right[row] if row < len(right) else ("", "")
-                    pad = 32 - len(lp)
-                    sys.stdout.write(f"{lc}{' ' * pad} {rc}\033[K\n")
+                    pad = self.ENTRY_WIDTH - len(lp) + 3
+                    sys.stdout.write(f"{lc}{' ' * pad}{rc}\033[K\n")
 
                 sys.stdout.flush()
                 sleep(1)
