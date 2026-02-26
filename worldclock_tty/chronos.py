@@ -84,7 +84,8 @@ class Chronos:
             sign = "+" if t.offset >= 0 else "-"
             h, m = divmod(abs(t.offset) // 60, 60)
             offset_str = f"UTC{sign}{h}:{m:02d}" if m else f"UTC{sign}{h}"
-            right_part = f"{offset_str} {time_str}"
+            offset_display = f"{offset_str:<6}"
+            right_part = f"{offset_display} {time_str}"
         else:
             right_part = time_str
         gap = " " * (self.ENTRY_WIDTH - len(city) - len(right_part))
@@ -93,7 +94,7 @@ class Chronos:
             colored = (
                 f"{self.CITY}{city}{self.R}"
                 f"{gap}"
-                f"{self.OFFSET}{offset_str}{self.R} "
+                f"{self.OFFSET}{offset_display}{self.R} "
                 f"{self.TIME}{time_str}{self.R}"
             )
         else:
