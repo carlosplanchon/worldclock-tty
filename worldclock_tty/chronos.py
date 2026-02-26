@@ -72,23 +72,36 @@ class Chronos:
     OFFSET = fg(240)  # medium gray
     TIME   = fg(255)  # white
 
+    def __init__(self, show_offset: bool = True) -> None:
+        self.show_offset = show_offset
+
     def _entry(self, tz: str) -> tuple[str, str]:
         """Return (plain, colored) for a timezone row, time right-justified."""
         city = _get_city(tz)
         t = now(tz)
         time_str = t.format("HH:mm:ss")
-        sign = "+" if t.offset >= 0 else "-"
-        h, m = divmod(abs(t.offset) // 60, 60)
-        offset_str = f"UTC{sign}{h}:{m:02d}" if m else f"UTC{sign}{h}"
-        right_part = f"{offset_str} {time_str}"
+        if self.show_offset:
+            sign = "+" if t.offset >= 0 else "-"
+            h, m = divmod(abs(t.offset) // 60, 60)
+            offset_str = f"UTC{sign}{h}:{m:02d}" if m else f"UTC{sign}{h}"
+            right_part = f"{offset_str} {time_str}"
+        else:
+            right_part = time_str
         gap = " " * (self.ENTRY_WIDTH - len(city) - len(right_part))
-        plain   = f"{city}{gap}{right_part}"
-        colored = (
-            f"{self.CITY}{city}{self.R}"
-            f"{gap}"
-            f"{self.OFFSET}{offset_str}{self.R} "
-            f"{self.TIME}{time_str}{self.R}"
-        )
+        plain = f"{city}{gap}{right_part}"
+        if self.show_offset:
+            colored = (
+                f"{self.CITY}{city}{self.R}"
+                f"{gap}"
+                f"{self.OFFSET}{offset_str}{self.R} "
+                f"{self.TIME}{time_str}{self.R}"
+            )
+        else:
+            colored = (
+                f"{self.CITY}{city}{self.R}"
+                f"{gap}"
+                f"{self.TIME}{time_str}{self.R}"
+            )
         return plain, colored
 
     def print_time_screen(self, timezones: list[str]) -> None:
@@ -135,10 +148,17 @@ app = typer.Typer(help="World clock for the terminal.")
 
 
 @app.callback(invoke_without_command=True)
-def run(ctx: typer.Context) -> None:
+def run(
+    ctx: typer.Context,
+    sort: bool = typer.Option(True, "--sort/--no-sort", help="Sort timezones by UTC offset."),
+    show_offset: bool = typer.Option(True, "--offset/--no-offset", help="Show UTC offset alongside times."),
+) -> None:
     """Display the world clock."""
     if ctx.invoked_subcommand is None:
-        Chronos().print_time_screen(_load_config())
+        timezones = _load_config()
+        if sort:
+            timezones = sorted(timezones, key=lambda tz: now(tz).offset)
+        Chronos(show_offset=show_offset).print_time_screen(timezones)
 
 
 @app.command()

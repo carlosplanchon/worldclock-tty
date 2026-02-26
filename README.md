@@ -28,6 +28,19 @@ Press `Ctrl+C` to exit.
 
 The display shows your local time at the top, followed by all configured timezones in two columns, updated every second.
 
+### Options
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--sort` / `--no-sort` | on | Sort timezones by UTC offset (lowest first). |
+| `--offset` / `--no-offset` | on | Show the UTC offset (e.g. `UTC-3`) next to each time. |
+
+```
+worldclock-tty --no-sort          # keep the order from config
+worldclock-tty --no-offset        # hide UTC offset labels
+worldclock-tty --no-sort --no-offset
+```
+
 ## Managing timezones
 
 Timezones are stored in `~/.config/chronos/config.json`. Use IANA timezone names (e.g. `America/Chicago`, `Europe/Paris`).
