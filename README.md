@@ -6,14 +6,9 @@ A terminal-based world clock that displays multiple timezones in real-time.
 
 This program is a heavy refactor of a timezone clock I made in 2016.
 
-## Installation with uv
+## Installation
 ```bash
-uv add worldclock-tty
-```
-
-## Installation with pip
-```bash
-pip install worldclock-tty
+uv tool install worldclock-tty
 ```
 
 ## Usage
