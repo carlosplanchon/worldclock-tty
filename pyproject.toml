@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "worldclock-tty"
-version = "0.4.5"
+version = "0.5.0"
 description = "A terminal-based world clock that displays multiple timezones in real-time."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -34,7 +34,10 @@ Repository = "https://github.com/carlosplanchon/worldclock-tty"
 worldclock-tty = "worldclock_tty.chronos:main"
 
 [project.optional-dependencies]
-dev = ["pytest"]
+dev = ["pytest", "ruff"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py310"

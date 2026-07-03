@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 
 import json
+import os
 import sys
 from pathlib import Path
 from time import sleep
+from typing import NoReturn
 
 import typer
 from colored import attr, fg
@@ -34,7 +36,18 @@ DEFAULT_TIMEZONES = [
     "Pacific/Honolulu",
 ]
 
-CONFIG_PATH = Path.home() / ".config" / "chronos" / "config.json"
+def _config_dir() -> Path:
+    """Base directory for the config, honoring ``XDG_CONFIG_HOME``.
+
+    Per the XDG spec, a relative or empty value is ignored and falls
+    back to ``~/.config``.
+    """
+    xdg = os.environ.get("XDG_CONFIG_HOME", "")
+    base = Path(xdg) if xdg and Path(xdg).is_absolute() else Path.home() / ".config"
+    return base / "worldclock-tty"
+
+
+CONFIG_PATH = _config_dir() / "config.json"
 
 
 def _get_city(tz: str) -> str:
@@ -46,15 +59,43 @@ def _get_city(tz: str) -> str:
     return tz.split("/")[-1].replace("_", " ")
 
 
+def _config_error(detail: object) -> NoReturn:
+    typer.echo(
+        f"Config file at {CONFIG_PATH} is invalid ({detail}).\n"
+        "Fix it by hand or run 'worldclock-tty reset' to restore the defaults.",
+        err=True,
+    )
+    raise typer.Exit(1)
+
+
 def _load_config() -> list[str]:
-    if CONFIG_PATH.exists():
-        return json.loads(CONFIG_PATH.read_text())["timezones"]
-    return list(DEFAULT_TIMEZONES)
+    if not CONFIG_PATH.exists():
+        return list(DEFAULT_TIMEZONES)
+    try:
+        timezones = json.loads(CONFIG_PATH.read_text())["timezones"]
+    except (OSError, json.JSONDecodeError, KeyError, TypeError) as exc:
+        _config_error(exc)
+    if not isinstance(timezones, list):
+        _config_error("'timezones' must be a list")
+    return timezones
 
 
 def _save_config(timezones: list[str]) -> None:
     CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
     CONFIG_PATH.write_text(json.dumps({"timezones": timezones}, indent=2))
+
+
+def _is_valid_timezone(tz: str) -> bool:
+    """Return True if `tz` is an IANA name pendulum can resolve.
+
+    Validates against the same call the clock uses at runtime, so any
+    zone accepted here is guaranteed not to break the display later.
+    """
+    try:
+        now(tz)
+    except ValueError:
+        return False
+    return True
 
 
 class Chronos:
@@ -72,14 +113,15 @@ class Chronos:
     OFFSET = fg(240)  # medium gray
     TIME   = fg(255)  # white
 
-    def __init__(self, show_offset: bool = True) -> None:
+    def __init__(self, show_offset: bool = True, time_format: str = "HH:mm:ss") -> None:
         self.show_offset = show_offset
+        self.time_format = time_format
 
     def _entry(self, tz: str) -> tuple[str, str]:
         """Return (plain, colored) for a timezone row, time right-justified."""
         city = _get_city(tz)
         t = now(tz)
-        time_str = t.format("HH:mm:ss")
+        time_str = t.format(self.time_format)
         if self.show_offset:
             sign = "+" if t.offset >= 0 else "-"
             h, m = divmod(abs(t.offset) // 60, 60)
@@ -120,7 +162,7 @@ class Chronos:
                 local = now()
                 local_tz   = _get_city(local.tzinfo.name)
                 local_date = local.format("YYYY-MM-DD")
-                local_time = local.format("HH:mm:ss")
+                local_time = local.format(self.time_format)
                 sys.stdout.write(
                     f"{self.LOCAL_LABEL}LOCAL [{local_tz}]:{self.R} "
                     f"{self.LOCAL_DATE}{local_date}{self.R} "
@@ -153,18 +195,27 @@ def run(
     ctx: typer.Context,
     sort: bool = typer.Option(True, "--sort/--no-sort", help="Sort timezones by UTC offset."),
     show_offset: bool = typer.Option(True, "--offset/--no-offset", help="Show UTC offset alongside times."),
+    hour12: bool = typer.Option(False, "--12h/--24h", help="Use a 12-hour clock with AM/PM."),
 ) -> None:
     """Display the world clock."""
     if ctx.invoked_subcommand is None:
         timezones = _load_config()
         if sort:
             timezones = sorted(timezones, key=lambda tz: now(tz).offset)
-        Chronos(show_offset=show_offset).print_time_screen(timezones)
+        time_format = "hh:mm:ss A" if hour12 else "HH:mm:ss"
+        Chronos(show_offset=show_offset, time_format=time_format).print_time_screen(timezones)
 
 
 @app.command()
 def add(timezone: str = typer.Argument(help="Timezone to add, e.g. America/Chicago")) -> None:
     """Add a timezone to the clock."""
+    if not _is_valid_timezone(timezone):
+        typer.echo(
+            f"'{timezone}' is not a valid IANA timezone name "
+            "(e.g. America/Chicago, Europe/Paris).",
+            err=True,
+        )
+        raise typer.Exit(1)
     timezones = _load_config()
     if timezone in timezones:
         typer.echo(f"'{timezone}' is already in the list.", err=True)

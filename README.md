@@ -35,16 +35,18 @@ The display shows your local time at the top, followed by all configured timezon
 |------|---------|-------------|
 | `--sort` / `--no-sort` | on | Sort timezones by UTC offset (lowest first). |
 | `--offset` / `--no-offset` | on | Show the UTC offset (e.g. `UTC-3`) next to each time. |
+| `--12h` / `--24h` | `--24h` | Use a 12-hour clock with AM/PM instead of 24-hour. |
 
 ```
 worldclock-tty --no-sort          # keep the order from config
 worldclock-tty --no-offset        # hide UTC offset labels
+worldclock-tty --12h              # 12-hour clock with AM/PM
 worldclock-tty --no-sort --no-offset
 ```
 
 ## Managing timezones
 
-Timezones are stored in `~/.config/chronos/config.json`. Use IANA timezone names (e.g. `America/Chicago`, `Europe/Paris`).
+Timezones are stored in `$XDG_CONFIG_HOME/worldclock-tty/config.json` (defaults to `~/.config/worldclock-tty/config.json`). Use IANA timezone names (e.g. `America/Chicago`, `Europe/Paris`).
 
 ```
 worldclock-tty add America/Chicago       # add a timezone
