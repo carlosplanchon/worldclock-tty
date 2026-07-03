@@ -1,5 +1,11 @@
 # worldclock-tty
 
+[![CI](https://github.com/carlosplanchon/worldclock-tty/actions/workflows/ci.yml/badge.svg)](https://github.com/carlosplanchon/worldclock-tty/actions/workflows/ci.yml)
+[![PyPI version](https://img.shields.io/pypi/v/worldclock-tty.svg)](https://pypi.org/project/worldclock-tty/)
+[![Python versions](https://img.shields.io/pypi/pyversions/worldclock-tty.svg)](https://pypi.org/project/worldclock-tty/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/carlosplanchon/worldclock-tty)
+
 A terminal-based world clock that displays multiple timezones in real-time.
 
 ![worldclock-tty screenshot](https://raw.githubusercontent.com/carlosplanchon/worldclock-tty/refs/heads/main/worldclock_tty/assets/screenshot.png)
