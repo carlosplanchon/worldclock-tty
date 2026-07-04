@@ -405,9 +405,26 @@ class Chronos:
 app = typer.Typer(help="World clock for the terminal.")
 
 
+def _version_callback(value: bool) -> None:
+    if value:
+        # Imported lazily: at top level it would be a circular import, since
+        # the package __init__ imports this module before defining __version__.
+        from worldclock_tty import __version__
+
+        typer.echo(f"worldclock-tty {__version__}")
+        raise typer.Exit()
+
+
 @app.callback(invoke_without_command=True)
 def run(
     ctx: typer.Context,
+    version: bool = typer.Option(
+        False,
+        "--version",
+        help="Show the version and exit.",
+        callback=_version_callback,
+        is_eager=True,
+    ),
     sort: bool = typer.Option(True, "--sort/--no-sort", help="Sort timezones by UTC offset."),
     show_offset: bool = typer.Option(True, "--offset/--no-offset", help="Show UTC offset alongside times."),
     hour12: bool = typer.Option(False, "--12h/--24h", help="Use a 12-hour clock with AM/PM."),

@@ -615,3 +615,21 @@ class TestChronosPalette:
             assert not c.CITY.startswith(bold)
         finally:
             colored.set_tty_aware(True)
+
+
+class TestVersion:
+    def test_version_flag_prints_and_exits(self):
+        from worldclock_tty import __version__
+
+        result = runner.invoke(app, ["--version"])
+        assert result.exit_code == 0
+        out = _text(result)
+        assert "worldclock-tty" in out
+        assert __version__ in out
+
+    def test_version_short_circuits_before_config(self, config_path):
+        # Eager: prints even when the config is corrupt (never loads it).
+        config_path.write_text("{ garbage")
+        result = runner.invoke(app, ["--version"])
+        assert result.exit_code == 0
+        assert "invalid" not in _text(result).lower()
