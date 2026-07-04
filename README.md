@@ -62,8 +62,14 @@ or anything beyond ±12h) fall back to the numeric `UTC±N`.
 `--full-military` (`--dtg`) replaces each time with a **Date-Time Group**:
 `DDHHMM` + zone letter + `MON YY`, e.g. `041430Z JUL 26` (day 04, 14:30, Zulu,
 July 2026). It is minute-precision and always 24-hour, so it overrides the
-offset and `--12h` flags. The `LOCAL` header uses `J` (Juliet), the military
-designator for local time; zones with no official letter use `*`.
+offset and `--12h` flags. Zones with no official letter use `*`.
+
+The `LOCAL` header always ends in `J` (Juliet). In the military system Juliet is
+*local time itself*, not a fixed UTC offset, so the header stays `J` whatever your
+offset happens to be. This is expected even when your own zone also appears in the
+list with its offset letter: at UTC-3 the header reads `...J` while the matching
+row reads `...P` (Papa). The two are consistent: `J` labels "your local time",
+`P` labels "the -3 offset".
 
 ## Colors and themes
 
