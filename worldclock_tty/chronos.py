@@ -383,7 +383,7 @@ class Chronos:
                         f"{self.LOCAL_DATE}{local_date}{self.R} "
                         f"{self.LOCAL_TIME}{local_time}{self.R}"
                     )
-                sys.stdout.write(f"{header}\033[K\n")
+                sys.stdout.write(f"{header}\033[K")
 
                 # Build columns as (plain, colored) pairs for correct padding
                 left:  list[tuple[str, str]] = []
@@ -395,14 +395,18 @@ class Chronos:
                     lp, lc = left[row]  if row < len(left)  else ("", "")
                     rp, rc = right[row] if row < len(right) else ("", "")
                     pad = self.ENTRY_WIDTH - len(lp) + 3
-                    sys.stdout.write(f"{lc}{' ' * pad}{rc}\033[K\n")
+                    # Newline before each row, not after: the frame must not
+                    # end in "\n" or the cursor parks on a blank line below.
+                    sys.stdout.write(f"\n{lc}{' ' * pad}{rc}\033[K")
 
                 sys.stdout.flush()
                 sleep(1)
         except KeyboardInterrupt:
             pass
         finally:
-            sys.stdout.write("\033[?25h")  # restore cursor, terminal state outlives the process
+            # Newline so the shell prompt gets its own line, then restore the
+            # cursor: terminal state outlives the process.
+            sys.stdout.write("\n\033[?25h")
             sys.stdout.flush()
 
 
