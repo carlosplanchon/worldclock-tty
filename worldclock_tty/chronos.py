@@ -357,6 +357,7 @@ class Chronos:
         half = len(timezones) // 2
         first_run = True
         try:
+            sys.stdout.write("\033[?25l")  # hide cursor while redrawing
             while True:
                 if first_run:
                     sys.stdout.write("\033[3J\033[2J\033[H")  # clear scrollback + screen on start
@@ -400,6 +401,9 @@ class Chronos:
                 sleep(1)
         except KeyboardInterrupt:
             pass
+        finally:
+            sys.stdout.write("\033[?25h")  # restore cursor, terminal state outlives the process
+            sys.stdout.flush()
 
 
 app = typer.Typer(help="World clock for the terminal.")
