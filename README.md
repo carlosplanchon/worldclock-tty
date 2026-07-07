@@ -27,7 +27,7 @@ worldclock-tty
 
 Press `Ctrl+C` to exit.
 
-The display shows your local time at the top, followed by all configured timezones in two columns, updated every second.
+The display shows your local time at the top, followed by all configured timezones in two columns, updated once a second by default (configurable with `--interval`).
 
 ### Options
 
@@ -35,6 +35,7 @@ The display shows your local time at the top, followed by all configured timezon
 |------|---------|-------------|
 | `--sort` / `--no-sort` | on | Sort timezones by UTC offset (lowest first). |
 | `--offset` / `--no-offset` | on | Show the UTC offset (e.g. `UTC-3`) next to each time. |
+| `--interval` / `-n` | `1` | Seconds between refreshes, snapped to the wall clock (e.g. `-n 5` ticks at `:00`, `:05`, `:10`). |
 | `--12h` / `--24h` | `--24h` | Use a 12-hour clock with AM/PM instead of 24-hour. |
 | `--military` / `--no-military` | off | Show NATO/military zone letters (`Z`, `N`, `P`, …) instead of `UTC±N`. Alias: `--zulu`. |
 | `--utc` | off | With `--military`, also show the numeric offset next to the letter. |
@@ -45,6 +46,7 @@ The display shows your local time at the top, followed by all configured timezon
 ```
 worldclock-tty --no-sort          # keep the order from config
 worldclock-tty --no-offset        # hide UTC offset labels
+worldclock-tty -n 5               # refresh every 5s, aligned to :00, :05, :10
 worldclock-tty --12h              # 12-hour clock with AM/PM
 worldclock-tty --military         # Zulu/November letters instead of UTC±N
 worldclock-tty --military --utc   # letters and the numeric offset (e.g. P UTC-3)
@@ -53,6 +55,12 @@ worldclock-tty --theme matrix     # use a color theme for this run
 worldclock-tty --color time=green --color city=45   # tweak individual colors
 worldclock-tty --no-sort --no-offset
 ```
+
+`--interval` (`-n`) sets the seconds between refreshes and snaps each redraw to
+the wall clock: `-n 5` updates at `:00`, `:05`, `:10`, …; `-n 2` at `:00`, `:02`,
+`:04`, …; and `-n 60` at the top of each minute. Intervals that don't divide a
+minute evenly (e.g. `-n 7`) stay evenly spaced from midnight. It pairs well with
+`--full-military` (minute-precision) and with a clock left running all day.
 
 Military zone letters map each whole-hour UTC offset to a letter: `Z` is UTC+0,
 `A`…`M` run east (skipping `J`, reserved for local time), and `N`…`Y` run west.

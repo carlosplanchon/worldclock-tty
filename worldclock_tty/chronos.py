@@ -258,6 +258,25 @@ def _parse_color_override(spec: str) -> tuple[str, str]:
     return element, value
 
 
+def _seconds_until_next_tick(t, interval: int) -> float:
+    """Delay in seconds to the next wall-clock instant aligned to ``interval``.
+
+    Boundaries are anchored to midnight, so ``interval=5`` fires at :00, :05,
+    :10, ...; ``interval=2`` at :00, :02, :04, ...; and larger values land on
+    the minute or hour (``60`` on each minute, ``300`` every five minutes).
+    The current sub-second position is included, so the redraw lands *on* the
+    boundary instead of one full ``interval`` after the previous frame.
+
+    Intervals that don't divide a minute evenly (e.g. 7) stay evenly spaced
+    from midnight rather than resetting each minute.
+    """
+    sod = t.hour * 3600 + t.minute * 60 + t.second + t.microsecond / 1_000_000
+    # sod >= 0, so int() floors. +1 selects the next boundary; the epsilon keeps
+    # a frame that lands a hair before a boundary from returning a ~0 delay.
+    steps = int(sod / interval + 1e-9) + 1
+    return steps * interval - sod
+
+
 class Chronos:
     R = attr("reset")
 
@@ -271,12 +290,14 @@ class Chronos:
         show_utc: bool = False,
         full_military: bool = False,
         palette: dict[str, str] | None = None,
+        refresh: int = 1,
     ) -> None:
         self.show_offset = show_offset
         self.time_format = time_format
         self.military = military
         self.show_utc = show_utc
         self.full_military = full_military
+        self.refresh = refresh
         self.palette = dict(palette) if palette else dict(_DEFAULT_THEME)
         # Rendering styles keyed the way the print methods reference them.
         self.CITY = self._style("city")
@@ -398,7 +419,7 @@ class Chronos:
                     sys.stdout.write(f"{lc}{' ' * pad}{rc}\033[K\n")
 
                 sys.stdout.flush()
-                sleep(1)
+                sleep(_seconds_until_next_tick(now(), self.refresh))
         except KeyboardInterrupt:
             pass
         finally:
@@ -460,6 +481,14 @@ def run(
         help="Per-element color override, e.g. --color city=green (repeatable). Elements: "
         + ", ".join(_ELEMENTS) + ".",
     ),
+    interval: int = typer.Option(
+        1,
+        "--interval",
+        "-n",
+        min=1,
+        help="Seconds between refreshes, snapped to the wall clock "
+        "(e.g. -n 5 ticks at :00, :05, :10).",
+    ),
 ) -> None:
     """Display the world clock."""
     if ctx.invoked_subcommand is None:
@@ -492,6 +521,7 @@ def run(
             show_utc=show_utc,
             full_military=full_military,
             palette=palette,
+            refresh=interval,
         ).print_time_screen(timezones)
 
 

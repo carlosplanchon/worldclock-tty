@@ -22,6 +22,7 @@ from worldclock_tty.chronos import (
     _parse_color_override,
     _save_config,
     _save_theme_name,
+    _seconds_until_next_tick,
     _theme_palette,
     app,
 )
@@ -633,3 +634,67 @@ class TestVersion:
         result = runner.invoke(app, ["--version"])
         assert result.exit_code == 0
         assert "invalid" not in _text(result).lower()
+
+
+class TestNextTick:
+    @pytest.mark.parametrize(
+        "second,interval,expected",
+        [
+            (3, 5, 2),    # 12:00:03 -> :05
+            (7, 5, 3),    # :07 -> :10
+            (58, 5, 2),   # :58 -> :00 of the next minute
+            (0, 5, 5),    # already on a boundary -> a full interval to the next
+            (3, 2, 1),    # :03 -> :04
+            (0, 2, 2),
+        ],
+    )
+    def test_delay_to_next_boundary(self, second, interval, expected):
+        t = pendulum.datetime(2026, 7, 4, 12, 0, second, tz="UTC")
+        assert _seconds_until_next_tick(t, interval) == expected
+
+    def test_includes_subsecond_position(self):
+        t = pendulum.datetime(2026, 7, 4, 12, 0, 3, 500000, tz="UTC")  # :03.5
+        assert _seconds_until_next_tick(t, 2) == pytest.approx(0.5)  # -> :04
+
+    def test_aligns_to_the_minute(self):
+        t = pendulum.datetime(2026, 7, 4, 12, 0, 41, tz="UTC")
+        assert _seconds_until_next_tick(t, 60) == 19  # -> 12:01:00
+
+    def test_aligns_to_five_minute_mark(self):
+        t = pendulum.datetime(2026, 7, 4, 12, 3, 0, tz="UTC")
+        assert _seconds_until_next_tick(t, 300) == 120  # -> 12:05:00
+
+    def test_delay_always_within_interval(self):
+        # Never 0 (no busy loop) and never past a full interval.
+        for second in range(60):
+            t = pendulum.datetime(2026, 7, 4, 12, 0, second, tz="UTC")
+            assert 0 < _seconds_until_next_tick(t, 5) <= 5
+
+
+class TestRefreshInterval:
+    def _captured_refresh(self, monkeypatch, args):
+        captured = {}
+        monkeypatch.setattr(
+            Chronos,
+            "print_time_screen",
+            lambda self, tzs: captured.update(refresh=self.refresh),
+        )
+        result = runner.invoke(app, args)
+        assert result.exit_code == 0
+        return captured["refresh"]
+
+    def test_default_is_one_second(self, config_path, monkeypatch):
+        assert self._captured_refresh(monkeypatch, []) == 1
+
+    def test_interval_flag_wired(self, config_path, monkeypatch):
+        assert self._captured_refresh(monkeypatch, ["--interval", "5"]) == 5
+
+    def test_short_flag_wired(self, config_path, monkeypatch):
+        assert self._captured_refresh(monkeypatch, ["-n", "2"]) == 2
+
+    def test_zero_rejected(self, config_path):
+        result = runner.invoke(app, ["-n", "0"])
+        assert result.exit_code != 0
+
+    def test_chronos_defaults_to_one(self):
+        assert Chronos().refresh == 1
